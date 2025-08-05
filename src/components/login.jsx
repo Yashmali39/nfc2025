@@ -5,7 +5,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 const Login = () => {
 
-  const {setIsLoggedIn, setUser} = useAuth();
+  const { setIsLoggedIn, setUser } = useAuth();
   const navigate = useNavigate();
   const {
     register,
@@ -19,32 +19,26 @@ const Login = () => {
 
     try {
 
-      const response = await fetch(`http://localhost:3000/users/login`, {
+      const response = await fetch(`https://47cd8359b069.ngrok-free.app/api/token/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify(data),
-        credentials: "include"
+        // credentials: "include"
       });
 
       if (response.ok) {
         const result = await response.json();
-        if(result.islogin){
-          setIsLoggedIn(true);
-          setUser(result.user);
-          console.log("User loggedin:", result);
-          alert("User Loggedin successfully!");
-          reset(); // clear form
-          if (result.user.role === "freelancer") {
-          navigate(`/freelancerprofile/${result.user.freelancerId}`);
-          } else {
-            navigate(`/clientprofile/${result.user.clientId}`);
-            console.log("client")
-          }
-        }else{
-          alert("something Went Wrong!");
-        }
+        
+        alert("User Loggedin successfully!")
+        reset();
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(userData));
+        setIsLoggedIn(true);
+        setUser(userData);
+        navigate('/profile');
+
       } else {
         console.error(result.message);
       }
@@ -60,7 +54,7 @@ const Login = () => {
         <div className='lg:text-4xl font-bold'>
           Login To Your Account
         </div>
-        
+
         <div>
           <input
             className='p-1 lg:w-[500px] border border-slate-300 rounded-xl'

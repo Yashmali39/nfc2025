@@ -2,32 +2,22 @@ import { createContext, useState, useContext, useEffect } from 'react';
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState();
   const [user, setUser] = useState();
 
-  useEffect(() => {
-      // Fetch user on app load
-      const checkAuth = async () => {
-        try {
-          const res = await fetch('http://localhost:3000/users/api/me', {
-            credentials: 'include' 
-          });
-          if (res.ok) {
-            const data = await res.json();
-            setUser(data);
-            setIsLoggedIn(true);
-          } else {
-            setUser(null);
-            setIsLoggedIn(false);
-          }
-        } catch (err) {
-          console.log(err);
-          setUser(null);
-        }
-      }
-  
-      checkAuth();
-    }, []);
+useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
+
+    if (token && storedUser) {
+      setIsLoggedIn(true);
+      setUser(JSON.parse(storedUser));
+    } else {
+      setIsLoggedIn(false);
+      setUser(null);
+    }
+  }, []);
+
 
   return (
     <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn, user, setUser }}>
