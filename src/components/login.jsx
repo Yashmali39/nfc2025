@@ -30,13 +30,14 @@ const Login = () => {
 
       if (response.ok) {
         const result = await response.json();
-        
+        console.log(`user :- ${result.user.full_name} and token :- ${result.token}`);
+        const token = result.token;
         alert("User Loggedin successfully!")
         reset();
         localStorage.setItem("token", token);
-        localStorage.setItem("user", JSON.stringify(userData));
+        localStorage.setItem("user", JSON.stringify(result.user));
         setIsLoggedIn(true);
-        setUser(userData);
+        setUser(result.user);
         navigate('/profile');
 
       } else {
@@ -47,7 +48,6 @@ const Login = () => {
     }
 
   }
-
   return (
     <div className='min-h-screen flex justify-center items-center'>
       <form onSubmit={handleSubmit(onSubmit)} className='M flex flex-col justify-center items-center p-3 gap-10 shadow-md lg:h-[500px] w-[550px] border border-slate-300 rounded-md'>

@@ -64,7 +64,7 @@ const Signin = () => {
               {...register("full_name", {
                 required: "Full Name is required",
                 minLength: { value: 4, message: 'Minimum length is 4' },
-                maxLength: { value: 10, message: 'Maximum length is 30' }
+                maxLength: { value: 30, message: 'Maximum length is 30' }
               })}
             />
             {errors.full_name && <p className='text-red-600'>{errors.full_name.message}</p>}
