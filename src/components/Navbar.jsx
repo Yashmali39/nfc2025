@@ -1,9 +1,7 @@
 import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
-import { Logcontext } from '../App';
 
 const Navbar = () => {
-    const [signedIn, setsignedIn] = useContext(Logcontext)
   return (
     <nav className=" bg-black text-white p-4 font-sans  fixed w-full">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row  justify-between items-center space-y-2 md:space-y-0">

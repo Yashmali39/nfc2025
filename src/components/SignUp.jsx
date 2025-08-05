@@ -1,128 +1,144 @@
-import { useState } from 'react';
+import React from 'react'
+import { useNavigate } from "react-router-dom";
+import { useForm } from 'react-hook-form'
+import { useAuth } from './AuthContext';
 
-const SignUp = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: ''
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+const Signin = () => {
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    
+  const {setIsLoggedIn, setUser} = useAuth();
+  const navigate = useNavigate();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset
+  } = useForm()
+
+  const onSubmit = async (data) => {
+    console.log(data)
+
     try {
-      const response = await fetch('/api/signup', {
-        method: 'POST',
+
+      const response = await fetch(`http://localhost:3000/users/create`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(data),
+        credentials: "include"
       });
 
-      if (!response.ok) {
-        throw new Error(await response.text());
+      if (response.ok) {
+        const result = await response.json();
+        console.log("User created:", result);
+        alert("User created successfully!");
+        reset(); // clear form
+        setIsLoggedIn(true);
+        setUser(result.user);
+        if (result.user.role === "freelancer") {
+          navigate(`/freelancerform/${result.user._id}`);
+        } else {
+          navigate(`/clientprofile/${result.user.clientId}`);//there is problem try to solve it 
+          console.log("client")
+        }
+      } else {
+        console.error("Failed to create user");
       }
-
-      setSuccess(true);
-    } catch (err) {
-      setError(err.message || 'Signup failed');
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.log(error.message)
     }
-  };
+
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-center mb-6">Create Account</h2>
-        
-        {success ? (
-          <div className="text-center py-8">
-            <div className="text-green-500 mb-4">Account created successfully!</div>
-            <p>You can now log in with your credentials.</p>
+    <div className='min-h-screen flex justify-center items-center'>
+      <form onSubmit={handleSubmit(onSubmit)} className='M flex flex-col justify-center items-center p-3 gap-10 shadow-md lg:h-[500px] w-[550px] border border-slate-300 rounded-md'>
+        <div className='lg:text-4xl font-bold'>
+          Create Your Account
+        </div>
+        <div className='flex gap-[20px]'>
+          <div>
+            <input
+              type="patextssword"
+              className='p-1 lg:w-[235px] border border-slate-300 rounded-xl'
+              placeholder="First Name"
+              {...register("firstName", {
+                required: "firstName is required",
+                minLength: { value: 4, message: 'Minimum length is 4' },
+                maxLength: { value: 10, message: 'Maximum length is 10' }
+              })}
+            />
+            {errors.firstName && <p className='text-red-600'>{errors.firstName.message}</p>}
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-2 text-red-500 bg-red-50 rounded text-sm">
-                {error}
-              </div>
-            )}
+          <div>
+            <input
+              type="text"
+              className='p-1 lg:w-[235px] border border-slate-300 rounded-xl'
+              placeholder="Last Name"
+              {...register("lastName", {
+                required: "lastName is required",
+                minLength: { value: 4, message: 'Minimum length is 4' },
+                maxLength: { value: 10, message: 'Maximum length is 10' }
+              })}
+            />
+            {errors.lastName && <p className='text-red-600'>{errors.lastName.message}</p>}
+          </div>
+        </div>
+        <div>
+          <input
+            className='p-1 lg:w-[500px] border border-slate-300 rounded-xl'
+            placeholder="Email"
+            {...register("email", {
+              required: "Email is required",
+              pattern: { value: /^\S+@\S+$/i, message: "Invalid email" }
+            })}
+          />
+          {errors.email && <p className='text-red-600'>{errors.email.message}</p>}
+        </div>
 
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Full Name
-              </label>
+        <div>
+          <input
+            type="password"
+            className='p-1 lg:w-[500px] border border-slate-300 rounded-xl'
+            placeholder="Password"
+            {...register("password", {
+              required: "Password is required",
+              minLength: { value: 4, message: 'Minimum length is 4' },
+              maxLength: { value: 10, message: 'Maximum length is 10' }
+            })}
+          />
+          {errors.password && <p className='text-red-600'>{errors.password.message}</p>}
+        </div>
+
+        <div>
+          <label className="block mb-1 font-semibold">Are you a freelancer or a client?</label>
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2">
               <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                required
+                type="radio"
+                value="freelancer"
+                {...register('role', { required: true })}
               />
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email Address
-              </label>
+              Freelancer
+            </label>
+            <label className="flex items-center gap-2">
               <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                required
+                type="radio"
+                value="client"
+                {...register('role', { required: true })}
               />
-            </div>
+              Client
+            </label>
+          </div>
+          {errors.role && <p className="text-red-500">Please select one</p>}
+        </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                required
-                minLength="8"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Use at least 8 characters
-              </p>
-            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Creating account...' : 'Sign Up'}
-            </button>
-          </form>
-        )}
-      </div>
+        <button type='submit' className='bg-blue-600 text-white px-4 py-2 rounded-xl shadow hover:bg-blue-700 lg:w-[500px]'>Create User</button>
+      </form>
     </div>
-  );
-};
+  )
+}
 
-export default SignUp;
+export default Signin;

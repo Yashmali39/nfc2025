@@ -1,16 +1,17 @@
 import React, { useContext, useState } from 'react'
 import { Route, Routes } from 'react-router-dom';
 
+import {AuthProvider} from './components/AuthContext';
+
 import Home from './components/Home'
 import Navbar from './components/Navbar'
 import SignUp from './components/SignUp';
 import Login from './components/login';
-export const Logcontext = React.createContext()
+
 const App = () => {
-  const [signedIn,setSignedIn]=useState(false)
   return (
    <>
-   <Logcontext.Provider value={[signedIn,setSignedIn]}>
+   <AuthProvider>
     <div className=''>
       <Navbar />
     </div>
@@ -22,7 +23,7 @@ const App = () => {
 
       </Routes>
       </div>
-         </Logcontext.Provider>
+   </AuthProvider>
 
       </>
    

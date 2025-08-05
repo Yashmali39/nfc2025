@@ -1,112 +1,102 @@
-import { useContext, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Logcontext } from '../App';
-
+import React from 'react'
+import { useNavigate } from "react-router-dom";
+import { useForm } from 'react-hook-form'
+import { NavLink } from 'react-router-dom';
+import { useAuth } from './AuthContext';
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+
+  const {setIsLoggedIn, setUser} = useAuth();
   const navigate = useNavigate();
-  const [signedIn, setsignedIn] = useContext(Logcontext)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset
+  } = useForm()
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  const onSubmit = async (data) => {
+    console.log(data)
 
     try {
-      // Note: Typically you should use POST for login
-      const response = await fetch(`/api/login?email=${encodeURIComponent(formData.email)}&password=${encodeURIComponent(formData.password)}`, {
-        method: 'GET',
+
+      const response = await fetch(`http://localhost:3000/users/login`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-        }
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data),
+        credentials: "include"
       });
 
-      if (!response.ok) {
-        throw new Error('Login failed');
+      if (response.ok) {
+        const result = await response.json();
+        if(result.islogin){
+          setIsLoggedIn(true);
+          setUser(result.user);
+          console.log("User loggedin:", result);
+          alert("User Loggedin successfully!");
+          reset(); // clear form
+          if (result.user.role === "freelancer") {
+          navigate(`/freelancerprofile/${result.user.freelancerId}`);
+          } else {
+            navigate(`/clientprofile/${result.user.clientId}`);
+            console.log("client")
+          }
+        }else{
+          alert("something Went Wrong!");
+        }
+      } else {
+        console.error(result.message);
       }
-
-      const data = await response.json();
-      
-      // Save token to localStorage
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('userEmail', formData.email);
-      setsignedIn(true)
-      
-      // Redirect to home/dashboard
-      navigate('/');
-    } catch (err) {
-      setError(err.message || 'Invalid email or password');
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.log(error.message)
     }
-  };
+
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
+    <div className='min-h-screen flex justify-center items-center'>
+      <form onSubmit={handleSubmit(onSubmit)} className='M flex flex-col justify-center items-center p-3 gap-10 shadow-md lg:h-[500px] w-[550px] border border-slate-300 rounded-md'>
+        <div className='lg:text-4xl font-bold'>
+          Login To Your Account
+        </div>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="p-2 text-red-500 bg-red-50 rounded text-sm">
-              {error}
-            </div>
-          )}
+        <div>
+          <input
+            className='p-1 lg:w-[500px] border border-slate-300 rounded-xl'
+            placeholder="Email"
+            {...register("email", {
+              required: "Email is required",
+              pattern: { value: /^\S+@\S+$/i, message: "Invalid email" }
+            })}
+          />
+          {errors.email && <p className='text-red-600'>{errors.email.message}</p>}
+        </div>
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Email Address
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              required
-            />
-          </div>
+        <div>
+          <input
+            type="password"
+            className='p-1 lg:w-[500px] border border-slate-300 rounded-xl'
+            placeholder="Password"
+            {...register("password", {
+              required: "Password is required",
+              minLength: { value: 4, message: 'Minimum length is 4' },
+              maxLength: { value: 10, message: 'Maximum length is 10' }
+            })}
+          />
+          {errors.password && <p className='text-red-600'>{errors.password.message}</p>}
+        </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              required
-            />
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
-      </div>
+        <button type='submit' className='bg-blue-600 text-white px-4 py-2 rounded-xl shadow hover:bg-blue-700 lg:w-[500px]'>Login</button>
+        <div>You dont have an account?
+          <NavLink to="/Signin" className="text-blue-600">
+            Signup
+          </NavLink>
+        </div>
+      </form>
     </div>
-  );
-};
+  )
+}
 
 export default Login;
